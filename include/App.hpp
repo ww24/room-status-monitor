@@ -33,6 +33,7 @@ class BLE {
   void setStatus(std::string status);
   void setContent(std::string content);
   void begin(void);
+  void beep(uint16_t duration);
   void yo(void);
   void call(void);
   void cancel(void);
