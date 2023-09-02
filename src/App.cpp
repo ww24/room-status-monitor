@@ -38,9 +38,7 @@ ServerCallbacks::ServerCallbacks(m5util::Display *display, BLE *ble)
 
 void ServerCallbacks::onConnect(BLEServer *pServer) {
   Serial.println("ble connected");
-  M5.Speaker.beep();
-  delay(100);
-  M5.Speaker.mute();
+  ble->beep(100);
 
   ble->setStatus(MSG_BLE_CONNECTED);
   display->setButtons("取消", "呼出", "Yo");
@@ -130,9 +128,22 @@ void BLE::begin(void) {
   setStatus(MSG_BLE_WAIT_CONNECTING);
 }
 
+void BLE::beep(uint16_t duration) {
+  M5.Speaker.beep();
+  delay(duration);
+  M5.Speaker.mute();
+}
+
 void BLE::yo(void) {
+  auto status = pCharacteristicStatus->getValue();
+  if (status == MSG_BLE_WAIT_CONNECTING) {
+    return;
+  }
+
+  beep(100);
+
   if (pCharacteristicCall->getValue() == NONE) {
-    last_status = pCharacteristicStatus->getValue();
+    last_status = status;
   }
 
   pCharacteristicCall->setValue(YO);
@@ -142,6 +153,13 @@ void BLE::yo(void) {
 }
 
 void BLE::call(void) {
+  auto status = pCharacteristicStatus->getValue();
+  if (status == MSG_BLE_WAIT_CONNECTING) {
+    return;
+  }
+
+  beep(100);
+
   if (pCharacteristicCall->getValue() == NONE) {
     last_status = pCharacteristicStatus->getValue();
   }
@@ -153,6 +171,13 @@ void BLE::call(void) {
 }
 
 void BLE::cancel(void) {
+  auto status = pCharacteristicStatus->getValue();
+  if (status != MSG_CALLING) {
+    return;
+  }
+
+  beep(100);
+
   last_canceled = std::time(0);
 
   pCharacteristicCall->setValue(NONE);
